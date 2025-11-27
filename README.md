@@ -1,52 +1,72 @@
-Primary AI microservice for the 1World TravelVerse project.
+# travelverse-ai-api
+
+Primary AI microservice for the **1World TravelVerse** project.
 
 This service exposes a FastAPI-based backend that provides:
 
--   **Profile extraction** – builds a structured travel profile from free-form text using Gemini.
--   **AI geocoding** – resolves noisy, multilingual location text into normalized names, coordinates and source URLs, powered by Gemini.
+-   **Profile extraction** – builds a structured travel profile from free-form multilingual text using Gemini.
+-   **AI geocoding** – resolves noisy, multilingual location text into normalized names, coordinates, metadata and source URLs.
 
-### Overview
+The microservice focuses on:
 
-`travelverse-ai-api` provides two core AI functions for the TravelVerse platform:
-
--   **Travel profile extraction**  
-    Converts free-form, multilingual text into a structured traveler profile using Gemini.  
-    Extracts interests, constraints, preferences and contextual information while guaranteeing a stable JSON schema.
-
--   **AI geocoding**  
-    Interprets noisy or partial location text (any language), performs reasoning + web search,  
-    and returns normalized place names, coordinates, country code, source URLs and locale-specific notes.
-
-The microservice is optimized for:
-
--   reliable structured output,
+-   reliable structured JSON output,
 -   multilingual understanding,
--   fault-tolerant extraction from imperfect user input,
--   clean JSON schemas for downstream systems.
+-   fault-tolerant processing of imperfect input,
+-   clean schemas for downstream systems.
 
-### Architectural Overview
+---
 
-The service is a lightweight FastAPI-based microservice built around two Gemini-powered capabilities:
+## Overview
 
--   **API layer (FastAPI)**
+`travelverse-ai-api` provides two core AI capabilities:
 
-    -   Provides `/api/profile/extract`, `/api/profile/geocode`, and `/api/health`
-    -   Uses Pydantic for strict schema validation
-    -   Uses `X-Guard-Token` for simple access control
+### **Travel Profile Extraction**
 
--   **AI layer (Gemini 2.5 Flash)**
+-   Converts arbitrary multilingual text into a structured traveler profile.
+-   Extracts interests, constraints, preferences, budget signals, timing hints and contextual intent.
+-   Always returns schema-validated JSON regardless of input quality.
 
-    -   Handles multilingual profile extraction
-    -   Performs multilingual free-text geocoding with reasoning and web search
-    -   Always returns structured JSON according to predefined schemas
+### **AI Geocoding**
 
--   **Configuration layer**
-    -   Controlled through `settings.toml` and `.env`
-    -   Includes service parameters, security settings, and Gemini service account configuration
+-   Interprets noisy or partial human-written location queries in any language.
+-   Performs reasoning + web search to identify real places and addresses.
+-   Returns:
+    -   normalized English names,
+    -   coordinates,
+    -   country code,
+    -   source URLs used by the model,
+    -   translated locale-specific notes.
+-   Handles specific locations, ambiguous cases, generic queries and precise addresses.
 
-This architecture keeps the service compact while delegating semantic reasoning to Gemini.
+---
 
-### Install
+## Architectural Overview
+
+The service is a lightweight FastAPI-based microservice composed of three layers:
+
+### **1. API Layer (FastAPI)**
+
+-   Exposes `/api/profile/extract`, `/api/profile/geocode`, and `/api/health`.
+-   Uses **Pydantic** for strict JSON schema validation.
+-   Protects endpoints using the `X-Guard-Token` header.
+-   Accepts fully multilingual input.
+
+### **2. AI Layer (Gemini 2.5 Flash)**
+
+-   Drives both profile extraction and geocoding.
+-   Performs multilingual understanding, reasoning and web search.
+-   Always produces deterministic, strictly validated JSON outputs.
+-   Handles ambiguity resolution and structured normalization.
+
+### **3. Configuration Layer**
+
+-   Controlled through `.env` and `settings.toml`.
+-   Defines service settings, security rules and Gemini service-account credentials.
+-   Keeps the service environment-agnostic and portable.
+
+---
+
+## Install
 
 Clone the source repository.
 
@@ -63,9 +83,9 @@ Create a virtual environment and install dependencies:
 uv sync
 ```
 
-This creates `.venv` in the project root and installs all dependencies from `pyproject.toml` and `uv.lock`.
+This creates `.venv` in the project root and installs dependencies from `pyproject.toml` and `uv.lock`.
 
-Create a `.env` file in the project root:
+Create a `.env` file:
 
 ```bash
 APP_ROOT=$(pwd)
@@ -80,9 +100,9 @@ EOF
 
 Configure `settings.toml`:
 
--   copy prepared `settings.toml` into project root
--   ensure `[service]`, `[security]` and `[genai]` sections are present
--   in `[genai]` configure:
+-   Copy prepared `settings.toml` into the project root
+-   Ensure `[service]`, `[security]`, and `[genai]` sections exist
+-   Configure the Gemini service account in `[genai]`:
 
 ```toml
 [genai]
@@ -97,99 +117,20 @@ Run the service:
 ./service.sh
 ```
 
-After startup, the service can be checked at:
+Check that it is running:
 
 -   `http://{host}:{port}/api/health`
 -   `http://{host}:{port}/api/profile/extract`
 -   `http://{host}:{port}/api/profile/geocode`
 
-### API endpoints
+---
 
-All endpoints are served under `/api` and protected by the `X-Guard-Token` header (see `[security]` in `settings.toml`).
-
-#### `GET /api/health`
-
-Simple health check, returns:
-
-```json
-{ "status": "ok" }
-```
-
-#### `POST /api/profile/extract`
-
-Builds a structured travel preference profile from free-form text using Gemini.  
-Input: multilingual unstructured text.  
-Output: normalized JSON profile according to the service schema.
-
-#### `POST /api/profile/geocode`
-
-LLM-based geocoding: resolves noisy, multilingual free-text descriptions of locations into:
-
--   standardized place name (English),
--   resolved official name,
--   country code,
--   latitude & longitude,
--   source URLs used for grounding,
--   locale-specific notes.
-
-### Architectural Overview
-
-The service is a lightweight FastAPI-based microservice composed of three layers:
-
-#### **API Layer (FastAPI)**
-
--   Exposes `/api/profile/extract`, `/api/profile/geocode`, and `/api/health`
--   Uses Pydantic for strict JSON schema validation
--   Protects endpoints with the `X-Guard-Token` header
--   Fully multilingual input support
-
-#### **AI Layer (Gemini 2.5 Flash)**
-
--   Powers both profile extraction and geocoding
--   Performs multilingual understanding, reasoning and web search
--   Always outputs deterministic, strictly validated JSON
--   Handles ambiguity resolution and structured normalization
-
-#### **Configuration Layer**
-
--   Controlled through `.env` and `settings.toml`
--   Defines service settings, security rules, and Gemini credentials
--   Keeps the microservice portable and environment-agnostic
-
-This architecture keeps the service compact while delegating heavy semantic reasoning to Gemini.
-
-### Features Overview
-
-`travelverse-ai-api` provides two core AI capabilities for the TravelVerse platform:
-
-#### **Travel Profile Extraction**
-
--   Converts free-form, multilingual user text into a structured travel profile
--   Extracts interests, constraints, preferences, budget signals, time hints and contextual intent
--   Powered by Gemini with guaranteed schema-safe JSON output
--   Resilient to noisy, incomplete or casually written input
-
-#### **AI Geocoding**
-
--   Interprets noisy or partial location text in any language
--   Performs reasoning + web search to identify real places
--   Normalizes names into English, resolves coordinates, country, and source URLs
--   Handles explicit places, ambiguous locations, generic categories and full addresses
--   Produces locale-translated notes for use in UX flows
-
-The microservice is optimized for:
-
--   reliable structured output,
--   multilingual understanding,
--   fault-tolerant processing of imperfect user input,
--   integration as a backend component in the broader TravelVerse system.
-
-### API Endpoints
+## API Endpoints
 
 All endpoints are served under `/api` and protected by the `X-Guard-Token` header  
 (configured in `[security]` of `settings.toml`).
 
-#### **GET `/api/health`**
+### **GET `/api/health`**
 
 Simple health check.  
 Returns:
@@ -198,50 +139,45 @@ Returns:
 { "status": "ok" }
 ```
 
-#### **POST `/api/profile/extract`**
+### **POST `/api/profile/extract`**
 
 Builds a structured travel preference profile from free-form multilingual text using Gemini.  
-Guarantees a stable JSON schema regardless of input quality.
+Always returns a stable JSON schema.
 
-#### **POST `/api/profile/geocode`**
+### **POST `/api/profile/geocode`**
 
 LLM-based geocoding that:
 
--   processes noisy / partial / multilingual location queries,
+-   processes noisy / partial / multilingual input,
 -   performs reasoning + web search,
--   resolves the place into normalized English names, coordinates, metadata, and locale-translated notes.
+-   resolves the place into normalized English names,
+-   returns coordinates, metadata and locale-translated notes.
 
-### Contributing
+---
 
-This repository is currently optimized for internal development during the TravelVerse project.  
-If you plan to extend or modify the service:
+## Contributing
 
--   follow the existing project structure,
+This repository is currently optimized for internal development within the TravelVerse project.
+
+If extending the service:
+
 -   keep prompts and schemas under strict version control,
 -   validate all Gemini outputs with Pydantic models,
--   ensure new endpoints are covered by lightweight integration tests.
+-   preserve deterministic JSON structure,
+-   ensure new endpoints include lightweight integration tests,
+-   maintain multilingual robustness.
 
-Pull requests and extensions should preserve:
+---
 
--   predictable JSON output,
--   stable schemas,
--   multilingual robustness,
--   reproducible geocoding behaviour.
+## Development Notes
 
-### Development Notes
-
--   The service relies on **Gemini 2.5 Flash** with service-account authentication.
--   All AI behaviours (profile extraction and geocoding) are controlled by internal prompts stored in the codebase.
--   Geocoding includes web-search calls and a multi-stage reasoning pipeline; therefore responses may vary depending on real-time search results.
--   For local debugging, enable verbose logging in `settings.toml` and watch `app/logs/service.log`.
+-   Powered by **Gemini 2.5 Flash** with service-account authentication.
+-   All AI prompts are embedded inside the codebase for reproducibility.
+-   Geocoding uses reasoning + web search; responses may vary based on real-time search results.
+-   Enable verbose logs in `settings.toml` and read `app/logs/service.log` for debugging.
 
 Recommended environment:
 
 -   Python 3.11+
 -   `uv` for dependency and venv management
 -   FastAPI + Uvicorn for serving
-
-### License
-
-This project is released under the MIT License.  
-See `LICENSE` for full details.
