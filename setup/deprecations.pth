@@ -1,0 +1,1 @@
+import logging, warnings; logging.captureWarnings(True); warnings.filterwarnings("ignore", category=DeprecationWarning); logging.getLogger("py.warnings").setLevel(logging.ERROR)

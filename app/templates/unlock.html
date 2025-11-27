@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>:: {{ system.project.name }} v{{ system.project.version }} ::</title>
+    <style>
+        @import url(https://fonts.googleapis.com/css?family=Roboto:300);
+        html, body, .container { height: 100%; padding: 0; margin: 0; }
+        body { background: #a0a0a0; }
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .container .form { background: #FFFFFF; width: 400px; text-align: center; padding: 30px;
+            box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24); }
+        .form input { font-family: 'Roboto', sans-serif; width: 100%; padding: 15px; margin: 0 0 15px;
+            box-sizing: border-box; outline: 0; border: 0; background: #f2f2f2; font-size: 14px; }
+        .form button { font-family: 'Roboto', sans-serif; font-size: 14px; font-weight: bold; color: #FFFFFF;
+            border: 0; width: 100%; padding: 15px; outline: 0; background: rgba(35, 50, 70, 1); cursor: pointer; }
+        .form button:hover, .form button:active, .form button:focus { background: rgba(35, 50, 70, 0.95); }
+        .form .message { font-family: 'Roboto', sans-serif; margin-bottom: 15px; margin-top: 0;
+            color: #E53935; font-size: 15px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form">
+            <form method="post">
+                <input type="hidden" name="source" value="{{ source }}"/>
+                <input type="password" name="token" placeholder="Enter unlock token"/>
+                {%- if message -%}
+                <p class="message">{{ message }}</p>
+                {% endif %}
+                <button>Unlock</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
